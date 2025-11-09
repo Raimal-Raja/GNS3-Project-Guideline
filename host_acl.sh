@@ -6,7 +6,7 @@ sudo apt-get install python3-paramiko -y
 
 # 2. Save the application
 nano gns3_acl_manager.py
-# (Copy the artifact code)
+# (paste python app code)
 
 # 3. Make it executable
 chmod +x gns3_acl_manager.py

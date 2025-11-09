@@ -2,7 +2,7 @@
 
 # Save the Python script
 cat > /root/acl_manager.py << 'EOF'
-# [Paste the artifact code here]
+# [Paste the python app code]
 EOF
 
 # Make it executable
