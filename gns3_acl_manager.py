@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GNS3 ACL Manager - Remote SSH Control Application
 Manages Access Control Lists for GNS3 Open vSwitch topology from host machine
