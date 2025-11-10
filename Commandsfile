@@ -1,0 +1,545 @@
+# GNS3 ACL Manager - Complete Setup Guide
+
+## 🎯 Overview
+Control your GNS3 Open vSwitch topology from your Ubuntu host machine using SSH. This Python application allows you to manage ACL rules remotely without logging into each device individually.
+
+---
+
+## 📋 Prerequisites
+
+### 1. Host Machine (Ubuntu Linux)
+- Python 3.6 or higher
+- SSH client
+- Network connectivity to GNS3 VM
+
+### 2. GNS3 Setup
+- GNS3 VM or devices must be running
+- SSH server enabled on each OVS device
+- Static routing already configured (as per your document)
+- Network connectivity between host and GNS3 devices
+
+---
+
+## 🔧 Installation
+
+### Step 1: Install Python Dependencies
+
+```bash
+# Update package list
+sudo apt-get update
+
+# Install paramiko (SSH library)
+sudo apt-get install python3-paramiko -y
+
+# Alternative: using pip
+pip3 install paramiko
+```
+
+### Step 2: Download and Setup the Application
+
+```bash
+# Create directory for the application
+mkdir -p ~/gns3-acl-manager
+cd ~/gns3-acl-manager
+
+# Save the Python script
+nano gns3_acl_manager.py
+# (Paste the artifact code and save with Ctrl+X, Y, Enter)
+
+# Make it executable
+chmod +x gns3_acl_manager.py
+```
+
+---
+
+## 🌐 GNS3 Device Configuration
+
+### Enable SSH on GNS3 OVS Devices
+
+You need to configure SSH access on each Open vSwitch device. Here's how:
+
+#### Method 1: Using GNS3 Console (Recommended)
+
+1. **Right-click each OVS device** in GNS3 and select "Console"
+
+2. **Install and configure SSH server:**
+
+```bash
+# On each OVS device (OVS1, OVS2, OVS3, OVS4):
+
+# Install OpenSSH server
+apk update
+apk add openssh
+
+# Generate SSH keys
+ssh-keygen -A
+
+# Set root password
+passwd
+# Enter a password (e.g., "gns3acl")
+
+# Configure SSH
+cat > /etc/ssh/sshd_config << 'EOF'
+Port 22
+PermitRootLogin yes
+PasswordAuthentication yes
+PubkeyAuthentication yes
+EOF
+
+# Start SSH service
+rc-service sshd start
+
+# Make SSH persistent
+rc-update add sshd default
+
+# Verify SSH is running
+rc-service sshd status
+netstat -tlnp | grep :22
+```
+
+#### Method 2: Using Startup Script (Persistent)
+
+Add this to each OVS device's startup configuration:
+
+```bash
+cat >> /etc/local.d/ssh-config.start << 'EOF'
+#!/bin/sh
+# Start SSH service
+rc-service sshd start 2>/dev/null
+EOF
+
+chmod +x /etc/local.d/ssh-config.start
+```
+
+---
+
+## 🔌 Network Configuration
+
+### Understanding GNS3 Port Mapping
+
+GNS3 maps device SSH ports to your host machine. You need to find these mappings:
+
+#### Option 1: Using GNS3 GUI
+
+1. **Right-click on device** → **Configure**
+2. Go to **"Network"** tab
+3. Look for port forwarding rules
+4. Note the SSH port (usually starts from 5000+)
+
+#### Option 2: Using GNS3 Server API
+
+```bash
+# List all nodes and their ports
+curl http://localhost:3080/v2/projects | jq
+
+# Or check GNS3 VM network settings
+virsh dumpxml GNS3VM | grep hostfwd
+```
+
+#### Option 3: Manual Testing
+
+```bash
+# Test SSH connection to each device
+ssh -p 5000 root@192.168.122.1  # OVS1
+ssh -p 5001 root@192.168.122.1  # OVS2
+ssh -p 5002 root@192.168.122.1  # OVS3
+ssh -p 5003 root@192.168.122.1  # OVS4
+```
+
+### Common Port Mappings
+
+| Device | Default SSH Port | GNS3 Host Port |
+|--------|------------------|----------------|
+| OVS1   | 22               | 5000           |
+| OVS2   | 22               | 5001           |
+| OVS3   | 22               | 5002           |
+| OVS4   | 22               | 5003           |
+
+---
+
+## 🚀 Running the Application
+
+### First Time Setup
+
+```bash
+cd ~/gns3-acl-manager
+python3 gns3_acl_manager.py
+```
+
+**During first run, you'll be prompted to configure:**
+
+1. **SSH Username** (usually `root`)
+2. **SSH Password** (the password you set earlier)
+3. **GNS3 VM IP** (e.g., `192.168.122.1`)
+4. **Base Port** (e.g., `5000`)
+
+The application will:
+- Test connections to all devices
+- Save configuration to `gns3_acl_config.json`
+- Display connection status
+
+### Example First-Time Setup Session
+
+```
+=== GNS3 Device Configuration ===
+
+Common SSH Credentials:
+Enter SSH username (default: root): root
+Enter SSH password: ********
+
+Enter GNS3 VM IP address (e.g., 192.168.122.1): 192.168.122.1
+Enter base SSH port for devices (default: 5000): 5000
+
+Testing connections to devices...
+
+Configuring OVS1 (port 5000)...
+✓ OVS1 connected successfully
+Configuring OVS2 (port 5001)...
+✓ OVS2 connected successfully
+Configuring OVS3 (port 5002)...
+✓ OVS3 connected successfully
+Configuring OVS4 (port 5003)...
+✓ OVS4 connected successfully
+
+✓ Configuration saved to gns3_acl_config.json
+```
+
+---
+
+## 📖 Usage Examples
+
+### Example 1: Block VPC1 from Reaching VPC2
+
+```
+Main Menu:
+[1] Select Device
+[2] Add ACL Rule
+...
+
+1. Select Device → Choose OVS1
+2. Add ACL Rule → Choose Blackhole Route
+3. Enter:
+   - Source IP: 10.0.1.2
+   - Destination IP: 10.0.5.2/32
+   - Table: 100
+   - Priority: 100
+```
+
+**Test from VPC1 console:**
+```
+ping 10.0.5.2 -c 4
+# Should fail - no response
+```
+
+### Example 2: Disable ICMP on OVS3
+
+```
+1. Select Device → Choose OVS3
+2. Add ACL Rule → Choose ICMP Control
+3. Choose 'd' (disable)
+```
+
+**Test from VPC1:**
+```
+ping 10.0.3.2 -c 4
+# Should timeout - OVS3 won't respond to pings
+```
+
+### Example 3: View All ACL Rules
+
+```
+Main Menu → [4] View ACL Rules (Current Device)
+
+# Shows:
+- IP Routing Rules
+- Custom Routing Tables
+- ICMP Status
+- IP Forwarding Status
+- RP Filter Status
+```
+
+### Example 4: Quick Template - Block Subnet
+
+```
+Main Menu → [7] ACL Templates
+Choose [2] Block subnet 10.0.1.0/24 from 10.0.5.0/24
+
+# Automatically applies:
+- Blackhole route
+- Routing rules
+```
+
+### Example 5: Batch Operations
+
+```
+Main Menu → [8] Batch Operations
+Choose [1] Enable RP Filter on all devices
+
+# Applies RP filter to all OVS devices simultaneously
+```
+
+---
+
+## 🔍 Verification Commands
+
+### From Host Machine (Ubuntu)
+
+```bash
+# Check if devices are reachable
+for port in 5000 5001 5002 5003; do
+    echo "Testing port $port..."
+    nc -zv 192.168.122.1 $port
+done
+
+# SSH into specific device manually
+ssh -p 5000 root@192.168.122.1
+
+# View routing rules on device
+ssh -p 5000 root@192.168.122.1 "ip rule show"
+```
+
+### From VPC Consoles in GNS3
+
+**VPC1 Console:**
+```
+# Test connectivity
+ping 10.0.1.1 -c 2    # Should work (OVS1)
+ping 10.0.5.2 -c 4    # May fail if ACL blocks it
+
+# Traceroute
+trace 10.0.5.2
+
+# Show VPC configuration
+show ip
+```
+
+**VPC2 Console:**
+```
+ping 10.0.1.2 -c 4
+trace 10.0.1.2
+```
+
+---
+
+## 📁 Configuration File
+
+The application saves configuration in `gns3_acl_config.json`:
+
+```json
+{
+    "credentials": {
+        "username": "root",
+        "password": "gns3acl",
+        "gns3_host": "192.168.122.1",
+        "base_port": 5000
+    },
+    "devices": [
+        {
+            "name": "OVS1",
+            "mgmt_ip": "192.168.122.1",
+            "port": 5000,
+            "device_ips": ["10.0.1.1", "10.0.2.1"]
+        },
+        ...
+    ]
+}
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+### Issue 1: Cannot Connect to Devices
+
+**Symptom:** `Connection refused` or timeout errors
+
+**Solutions:**
+```bash
+# 1. Check if GNS3 devices are running
+# In GNS3 GUI: Verify green play icon on devices
+
+# 2. Test SSH manually
+ssh -p 5000 root@192.168.122.1
+
+# 3. Check if SSH is running on device
+# From device console:
+rc-service sshd status
+netstat -tlnp | grep :22
+
+# 4. Restart SSH service
+rc-service sshd restart
+
+# 5. Check firewall (if any)
+iptables -L -n
+```
+
+### Issue 2: Authentication Failed
+
+**Solutions:**
+```bash
+# 1. Reset root password on device
+passwd
+
+# 2. Verify SSH config allows password auth
+grep PasswordAuthentication /etc/ssh/sshd_config
+
+# 3. Reconfigure the application
+python3 gns3_acl_manager.py
+# Choose option [9] Reconfigure Devices
+```
+
+### Issue 3: ACL Rules Not Working
+
+**Verification:**
+```bash
+# SSH into device
+ssh -p 5000 root@192.168.122.1
+
+# Check routing rules
+ip rule show
+
+# Check routing tables
+ip route show table all
+ip route show table 100
+
+# Check ICMP status
+cat /proc/sys/net/ipv4/icmp_echo_ignore_all
+
+# Check IP forwarding
+cat /proc/sys/net/ipv4/ip_forward
+```
+
+### Issue 4: Port Already in Use
+
+**Solution:**
+```bash
+# Find what's using the port
+sudo lsof -i :5000
+
+# Kill the process if needed
+sudo kill -9 <PID>
+
+# Or use different ports in GNS3
+```
+
+---
+
+## 🎓 ACL Rules Reference
+
+### 1. Blackhole Routes
+- **Purpose:** Drop packets to specific destination
+- **Use Case:** Block access to certain networks/IPs
+- **Example:** Block VPC1 from reaching VPC2
+
+### 2. ICMP Control
+- **Purpose:** Enable/disable ping responses
+- **Use Case:** Hide devices from network scanning
+- **Example:** Make OVS3 invisible to pings
+
+### 3. Interface Forwarding
+- **Purpose:** Control packet forwarding per interface
+- **Use Case:** Isolate network segments
+- **Example:** Disable forwarding on eth0
+
+### 4. Reverse Path Filtering
+- **Purpose:** Anti-spoofing protection
+- **Use Case:** Prevent IP address spoofing attacks
+- **Example:** Validate source addresses
+
+### 5. Rate Limiting
+- **Purpose:** Limit packet rates
+- **Use Case:** Prevent DoS attacks
+- **Example:** Limit ICMP to 10 packets/sec
+
+---
+
+## 🔐 Security Best Practices
+
+1. **Change Default Passwords**
+   ```bash
+   # Use strong passwords for SSH
+   passwd
+   ```
+
+2. **Use SSH Keys (Optional)**
+   ```bash
+   # Generate key on host
+   ssh-keygen -t ed25519
+   
+   # Copy to device
+   ssh-copy-id -p 5000 root@192.168.122.1
+   ```
+
+3. **Restrict SSH Access**
+   ```bash
+   # Edit /etc/ssh/sshd_config
+   PermitRootLogin prohibit-password
+   AllowUsers root
+   ```
+
+4. **Monitor ACL Changes**
+   - Keep logs of ACL modifications
+   - Test changes before applying to production
+
+---
+
+## 📚 Additional Resources
+
+### Useful Commands Inside Python App
+
+| Action | Menu Path |
+|--------|-----------|
+| Add blackhole route | Main → [2] → [1] |
+| Disable ICMP | Main → [2] → [2] |
+| View all rules | Main → [4] |
+| Quick block VPC1→VPC2 | Main → [7] → [1] |
+| Batch enable RP filter | Main → [8] → [1] |
+
+### Manual ACL Commands (Direct SSH)
+
+```bash
+# Add blackhole route
+ip route add blackhole 10.0.5.2/32 table 100
+ip rule add from 10.0.1.2 table 100 priority 100
+
+# Remove blackhole route
+ip rule del from 10.0.1.2 table 100
+ip route del blackhole 10.0.5.2/32 table 100
+
+# Disable ICMP
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all
+
+# Enable RP filter
+echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter
+```
+
+---
+
+## 📞 Support
+
+If you encounter issues:
+
+1. Check troubleshooting section above
+2. Verify SSH connectivity manually
+3. Check GNS3 device console for errors
+4. Review `gns3_acl_config.json` for correct settings
+
+---
+
+## ✅ Quick Start Checklist
+
+- [ ] Python 3 installed on Ubuntu host
+- [ ] Paramiko library installed
+- [ ] GNS3 topology running with 4 OVS devices
+- [ ] Static routing configured on OVS devices
+- [ ] SSH server installed on all OVS devices
+- [ ] SSH ports mapped in GNS3 (5000-5003)
+- [ ] Tested SSH connection manually
+- [ ] Downloaded and saved `gns3_acl_manager.py`
+- [ ] Made script executable
+- [ ] Ran first-time setup
+- [ ] All devices showing connected status
+
+---
+
+**Ready to go! Start managing your GNS3 ACLs remotely! 🚀**
