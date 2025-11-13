@@ -635,4 +635,4 @@ If this project helped you, please consider giving it a star! ⭐
 
 **Ready to control your network? Let's get started! 🚀**
 
-For detailed setup instructions, please refer to [Documentation.pdf](./Documentation.pdf) and [Guidelinesfile](./Guidelinesfile).
+For detailed setup instructions, please refer to [Documentation.pdf](./Corporate_Network_(EnvironmentSetup).pdf) and [Guidelinesfile](./README.md).
