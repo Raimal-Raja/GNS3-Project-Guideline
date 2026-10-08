@@ -2,13 +2,12 @@
 
 GNS3 networking lab resources with a saved topology, routing and ACL guidance, shell commands, and an appliance definition.
 
-## Repository guide
+## Setup and repository reference
 
-### Contents
+### Project structure
 
 - [Corporate_Network_(EnvironmentSetup).pdf](Corporate_Network_%28EnvironmentSetup%29.pdf)
 - [LICENSE](LICENSE)
-- [README.md](README.md)
 - [Topology.jpg](Topology.jpg)
 - [alpine-linux.gns3a](alpine-linux.gns3a)
 - [commands.sh](commands.sh)
@@ -39,7 +38,11 @@ The tracked repository contains lab resources, not the Python ACL-manager applic
 
 ### Validation
 
-Reviewed on 2026-10-08. Repository structure and documentation were reviewed. No application runtime, training job, or platform-specific build was executed.
+Audit: 2026-10-08. Repository structure, setup instructions and description were reviewed. Syntax checks do not establish full runtime correctness. External APIs, live scraping, GUI interaction, notebook training and production deployment were not comprehensively exercised.
+
+### Repository description
+
+The short GitHub description is provided in [REPOSITORY_DESCRIPTION.md](REPOSITORY_DESCRIPTION.md).
 
 ### Contributions
 
