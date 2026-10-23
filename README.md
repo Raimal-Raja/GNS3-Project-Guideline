@@ -1,49 +1,55 @@
-# GNS3-Project-Guideline
+# GNS3 Routing and ACL Lab
 
 GNS3 networking lab resources with a saved topology, routing and ACL guidance, shell commands, and an appliance definition.
 
-## Setup and repository reference
+## Project focus
 
-### Project structure
+Reference archive / lab resources. Use the directory map to choose a focused example or learning topic instead of treating the repository as one application.
 
-- [Corporate_Network_(EnvironmentSetup).pdf](Corporate_Network_%28EnvironmentSetup%29.pdf)
-- [LICENSE](LICENSE)
-- [Topology.jpg](Topology.jpg)
-- [alpine-linux.gns3a](alpine-linux.gns3a)
-- [commands.sh](commands.sh)
-- [requirements.txt](requirements.txt)
-- [static-Routing-Acl.gns3](static-Routing-Acl.gns3)
+## Workflow
 
-### Getting started
+```mermaid
+flowchart TD
+    A["Select a lab or version"] --> B["Read the associated source or notes"]
+    B --> C["Inspect compatibility and lab configuration"]
+    C --> D{"Expected outcome?"}
+    D -->|Yes| E["Record findings and continue"]
+    D -->|No| F["Review assumptions and inputs"]
+    F --> B
+```
+
+The diagram describes how to work through the material; it is not a deployed service topology.
+
+## Repository structure
+
+| Path | Purpose |
+| --- | --- |
+| [`Corporate_Network_(EnvironmentSetup).pdf`](Corporate_Network_%28EnvironmentSetup%29.pdf) | Project-specific source, resources, or learning material. |
+| [`LICENSE`](LICENSE) | Repository licensing terms. |
+| [`alpine-linux.gns3a`](alpine-linux.gns3a) | GNS3 appliance definition. |
+| [`commands.sh`](commands.sh) | Project-specific source, resources, or learning material. |
+| [`requirements.txt`](requirements.txt) | Python dependency manifest. |
+| [`static-Routing-Acl.gns3`](static-Routing-Acl.gns3) | Saved GNS3 topology. |
+
+## Getting started
 
 ```bash
 git clone https://github.com/Raimal-Raja/GNS3-Project-Guideline.git
 cd GNS3-Project-Guideline
 ```
 
-Create and activate a virtual environment, then install the project dependencies:
+Browse the resource folders and associated notes first. This repository is not a Python web service and does not have a single application launch command.
 
-```bash
-python -m venv .venv
-# Linux/macOS: source .venv/bin/activate
-# Windows PowerShell: .venv\Scripts\Activate.ps1
-python -m pip install -r "requirements.txt"
-```
+Use GNS3 with compatible, correctly licensed appliances. Review the saved topology and routing/ACL notes before starting devices.
 
-Browse the folders and linked notes above. This repository is a resource collection or documentation starter rather than a runnable application.
+## Verification
 
-### Configuration and limitations
+Use the setup commands and inspect the selected interface, example, or notebook with known inputs. This documentation review checks repository paths and dependency declarations; it does not claim fresh end-to-end execution or model-quality measurements.
 
-The tracked repository contains lab resources, not the Python ACL-manager application described in the older README. GNS3 topology execution requires the corresponding local appliances.
+## Contributing
 
-### Validation
+Include reproduction steps, the affected path, expected behavior, and the checks you ran. Keep credentials, generated environments, and unnecessary build artifacts out of commits.
 
-Recorded checks from the previous maintenance review (2026-10-08): Syntax checks do not establish full runtime correctness. External APIs, live scraping, GUI interaction, notebook training and production deployment were not comprehensively exercised.
+## License
 
-### Contributions
-
-Describe the issue, reproduction steps, environment, and expected behavior when proposing a change. Keep generated environments, credentials, and unnecessary build artifacts out of new commits.
-
-### License
-
-See [LICENSE](LICENSE) for the repository’s licensing terms.
+See [LICENSE](LICENSE) for the repository's license.
